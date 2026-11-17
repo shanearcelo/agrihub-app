@@ -1,98 +1,89 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { BrandLogo } from "../components/BrandLogo";
+import { Colors } from "../constants/theme";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+export default function SplashScreen() {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View style={styles.container}>
+      <View style={styles.outerGlow}>
+        <View style={styles.logoRing}>
+          <BrandLogo size={108} />
+        </View>
+      </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <Text style={styles.tagline}>Presko, Barato, Tatak ADSSU</Text>
+      <Text style={styles.subTagline}>Campus Fresh Produce Marketplace</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      {/* Progress Dots + Spinner */}
+      <View style={styles.dotsRow}>
+        <View style={[styles.dot, styles.dotActive]} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <ActivityIndicator
+        size="small"
+        color={Colors.accent}
+        style={{ marginTop: 18 }}
+      />
+      <Text style={styles.loadingText}>Loading fresh harvests...</Text>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <Text style={styles.footer}>
+        Agusan del Sur State College of Agriculture and Technology
+      </Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  outerGlow: {
+    width: 138,
+    height: 138,
+    borderRadius: 69,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 18,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  logoRing: {
+    width: 122,
+    height: 122,
+    borderRadius: 61,
+    backgroundColor: Colors.accent,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  title: {
-    textAlign: 'center',
+  tagline: { fontSize: 14, fontWeight: "700", color: "#FDE68A", marginTop: 4 },
+  subTagline: { fontSize: 12, color: "#D8F3DC", marginTop: 2 },
+  dotsRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 22,
   },
-  code: {
-    textTransform: 'uppercase',
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  dotActive: {
+    width: 16,
+    backgroundColor: Colors.accent,
+  },
+  loadingText: { fontSize: 11, color: "#A7F3D0", marginTop: 8 },
+  footer: {
+    position: "absolute",
+    bottom: 32,
+    fontSize: 11,
+    color: "#D8F3DC",
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
 });

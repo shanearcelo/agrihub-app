@@ -1,56 +1,85 @@
-# Welcome to your Expo app 👋
+# AgriHub
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+AgriHub is an Expo / React Native marketplace using Supabase Auth, PostgreSQL,
+Storage, and Realtime.
 
-## Get started
+## Supabase setup
 
-1. Install dependencies
+1. Create a Supabase project and copy its project URL and publishable (or legacy
+   anon) key into `.env.local`:
+
+   ```dotenv
+   EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-project-publishable-key
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
+   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
+   EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
+   ```
+
+   `.env.example` contains the same variable names. Never use a service-role key
+   in the mobile app.
+
+2. Run [`supabase/migrations/20261117000000_agrihub_supabase.sql`](./supabase/migrations/20261117000000_agrihub_supabase.sql)
+   in the Supabase SQL Editor. This is a **destructive AgriHub reset-and-rebuild
+   script**: it drops the app's tables and functions, resets the AgriHub schema
+   data, then recreates tables, the Auth profile trigger, RLS policies, Storage
+   buckets/policies, order/payment RPCs, and Realtime publication membership.
+   Back up first: it deletes AgriHub profiles and marketplace/order/payment/chat
+   data. It preserves `auth.users` and existing Storage objects, but profile
+   fields not held in Auth metadata must be restored separately. Empty the six
+   AgriHub Storage buckets using Supabase Storage before running if their files
+   should also be removed; Storage objects must be managed through the Storage
+   API/dashboard rather than by deleting rows in SQL.
+
+3. Configure Supabase Auth providers and redirect URLs for the app. Google
+   OAuth also requires the matching Google client IDs in `.env.local`.
+
+4. Install dependencies and start Expo:
 
    ```bash
    npm install
-   ```
-
-2. Start the app
-
-   ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Data migration notes
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+The migration creates the Supabase schema but does not copy Firebase Auth users,
+Firestore records, or Storage objects. Import those separately, preserving each
+user UUID where possible so profile relationships and Storage ownership paths
+remain consistent. Firebase passwords cannot be transferred as plaintext;
+choose an Auth-user import/password-reset strategy before cutover.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Admin account setup
 
-## Get a fresh project
+The designated admin email is **`admin@adssu.edu.ph`**. There is no default
+password in the app. Admin accounts cannot be created through the public
+AgriHub sign-up form.
 
-When you're ready, run:
+1. In Supabase Dashboard, open **Authentication → Users** and create or invite
+   `admin@adssu.edu.ph`. Set its password there or use the invitation flow.
+2. Run the AgriHub migration. Its Auth trigger creates the matching profile and
+   assigns the `admin` role based on this exact email. Existing Auth users are
+   also backfilled when the migration runs.
+3. If the Auth user already exists but the profile has the wrong role, a
+   project owner can correct it in the Supabase SQL Editor:
+
+   ```sql
+   update public.profiles p
+   set role = 'admin',
+       is_verified = true,
+       verification_status = 'verified'
+   from auth.users u
+   where p.id = u.id
+     and lower(u.email) = 'admin@adssu.edu.ph';
+   ```
+
+   This is a privileged recovery step; never expose a service-role key or allow
+   clients to assign their own role. To use a different admin email, update the
+   designated email consistently in the Auth trigger and app auth screens.
+
+## Validation
 
 ```bash
-npm run reset-project
+npx expo lint
+npx tsc --noEmit
 ```
-
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
